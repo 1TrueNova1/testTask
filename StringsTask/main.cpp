@@ -7,7 +7,6 @@
 
 namespace PortaOneTask
 {
-
 	//overload for the first part of task
 	char firstUniqueLetter(const std::string& text)
 	{
