@@ -13,7 +13,7 @@ namespace PortaOneTask
 	{
 		//to count how many times each letter was found
 		std::unordered_map<char, uint16_t> map;
-		//and to keep sight on the ordering
+		//and to keep track of the ordering
 		std::vector<char> order;
 
 		for (char letter : text)
@@ -94,6 +94,8 @@ int main()
 {
 	{
 		using namespace PortaOneTask;
+
+		std::cout << "Please, enter some text: \n";
 
 		std::string text;
 		std::getline(std::cin, text);
