@@ -1,0 +1,10 @@
+/Debug
+/Release
+/.vs
+StringsTask.sln
+
+/StringsTask/Release
+/StringsTask/Debug
+/StringsTask/StringsTask.vcxproj
+/StringsTask/StringsTask.vcxproj.filters
+/StringsTask/StringsTask.vcxproj.user
