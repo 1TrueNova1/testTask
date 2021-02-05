@@ -60,7 +60,7 @@ namespace PortaOneTask
 		return -1;
 	};
 
-	auto findUniqueInRange = [](const std::string& text, uint32_t start, uint32_t end)
+	auto findUniqueInRange = [](const std::string& text, int32_t start, int32_t end)
 	{
 		std::string letters;
 		std::string word;
