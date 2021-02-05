@@ -60,6 +60,33 @@ namespace PortaOneTask
 		return -1;
 	};
 
+	auto findUniqueInRange = [](const std::string& text, uint32_t start, uint32_t end)
+	{
+		std::string letters;
+		std::string word;
+		word.reserve(30);
+		int32_t prev, space;
+		char result;
+
+		//skip first symbols if they are not letters
+		prev = space = firstLetter(text, start);
+		while (space != -1 && space < end) {
+			space = firstNotLetter(text, space);
+			//special case for last word
+			if (space == -1 && space < end) [[unlikely]] {
+				word = text.substr(prev, end - 1);
+				if ((result = firstUniqueLetter(word)) != 0)
+					letters.push_back(result);
+				break;
+			}
+				//substring word from text and find unique letters in it
+			word = text.substr(prev, space - prev);
+			if ((result = firstUniqueLetter(word)) != 0)
+				letters.push_back(result);
+			prev = space = firstLetter(text, space);
+		}
+		return firstUniqueLetter(letters);
+	};
 }
 
 //compile under /std::c++latest for everything to work or at least /std::c++17 for it to build
@@ -68,58 +95,59 @@ int main()
 	{
 		using namespace PortaOneTask;
 
-		std::string text = R"(aabbcb, c)";
+		std::string text;
+		std::getline(std::cin, text);
 
 		//uncomment for case insensitivity
 		//stringToLower(text);
 
-		const int lettersInWord = 20;
-		std::string letters;
-		letters.reserve(text.size() / lettersInWord);
+		char result = 0;
 
-		std::string word;
-		word.reserve(lettersInWord);
-
-		int32_t prev, space;
-		char result;
-
-
-
-		//skip first symbols if they are not letters
-		prev = space = firstLetter(text, 0);
-		while (space != -1) {
-			space = firstNotLetter(text, space);
-			//special case for last word
-			if (space == -1) [[unlikely]] {
-				word = text.substr(prev, text.size() - 1);
-				if ((result = firstUniqueLetter(word)) != 0)
-					letters.push_back(result);
-				break;
-			}
-			word = text.substr(prev, space - prev);
-			if ((result = firstUniqueLetter(word)) != 0)
-				letters.push_back(result);
-			prev = space = firstLetter(text, space);
-		}
-		
-
-		std::cout << text << "\n";
-		for (char letter : letters)
+		if (text.size() < 1000)
 		{
-			if (letter != 0)
-				std::cout << letter;
-			else
-				std::cout << "No unique letter";
-			std::cout << "\n";
+			result = findUniqueInRange(text, 0, text.size());
 		}
-		std::cout << "\n\n";
+		else
+		{
+			//switch to multithreaded arhitecture if text is quite big
+			std::vector<std::thread> threads;
 
-		result = firstUniqueLetter(letters);
+			size_t nthreads = std::thread::hardware_concurrency();
+			threads.reserve(nthreads);
+
+			std::string letters;
+			letters.resize(nthreads);
+
+			size_t step = text.size() / nthreads;
+			size_t lastStart = 0, lastEnd = step;
+			std::vector<size_t> start(nthreads), end(nthreads);
+
+			auto threadWork = [&text, &start, &end, &letters](size_t index) {
+				letters[index] = findUniqueInRange(text, start[index], end[index]);
+			};
+
+			//diving the text on smaller batches and running a new thread for each one
+			for (size_t i = 0; i < nthreads; ++i)
+			{
+				start[i] = lastStart;
+				end[i] = lastEnd;
+				lastStart = lastEnd;
+				lastEnd += step;
+				threads.push_back(std::move(std::thread(threadWork, i)));
+			}
+
+			for (std::thread& thread : threads)
+			{
+				thread.join();
+			}
+
+			result = firstUniqueLetter(letters);
+		}
 
 		if (result != 0)
 			std::cout << result;
 		else
-			std::cout << "No unique letter";
+			std::cout << "No unique letter found";
 	}
 
 	return 0;
