@@ -2,75 +2,37 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <unordered_set>
-#include <map>
+#include <functional>
+#include <unordered_map>
+#include <thread>
 
 namespace PortaOneTask
 {
-	//overload for the first part of task
+
 	char firstUniqueLetter(const std::string& text)
 	{
-		std::unordered_set<char> checkedLetters;
+		//to count how many times each letter was found
+		std::unordered_map<char, uint16_t> map;
+		//and to keep sight on the ordering
+		std::vector<char> order;
 
-		char current;
-		int count;
-		bool repeats;
-		for (size_t i = 0; i < text.size(); ++i)
+		for (char letter : text)
 		{
-			current = text[i];
-			//if letter was already observed, can skip iteration
-			if (checkedLetters.find(current) != checkedLetters.end())
-				continue;
-			count = 0;
-			repeats = false;
-			for (size_t j = i + 1; j < text.size(); ++j)
-			{
-				if (text[j] == current) [[unlikely]]
-				{
-					repeats = true;
-					break;
-				}
+			if (map.find(letter) != map.end())
+				map[letter]++;
+			else {
+				map.insert(std::make_pair(letter, 1));
+				order.push_back(letter);
 			}
-			if (!repeats)
-				return current;
-
-			checkedLetters.insert(current);
 		}
-		return 0;
-	}
 
-
-	//overload for the second part of task
-	char firstUniqueLetter(const std::vector<char>& letters)
-	{
-		std::unordered_set<char> checkedLetters;
-
-		char current;
-		int count;
-		bool repeats;
-		for (size_t i = 0; i < letters.size(); ++i)
+		for (char letter : order)
 		{
-			current = letters[i];
-			if (current == 0) [[unlikely]]
-				continue;
-			//if letter was already observed, can skip iteration
-			if (checkedLetters.find(current) != checkedLetters.end())
-				continue;
-			count = 0;
-			repeats = false;
-			for (size_t j = i + 1; j < letters.size(); ++j)
-			{
-				if (letters[j] == current) [[unlikely]]
-				{
-					repeats = true;
-					break;
-				}
-			}
-			if (!repeats)
-				return current;
-
-			checkedLetters.insert(current);
+			if (map[letter] == 1)
+				return letter;
 		}
+
+		//naught if no unique letter exists
 		return 0;
 	}
 
@@ -97,6 +59,7 @@ namespace PortaOneTask
 		}
 		return -1;
 	};
+
 }
 
 //compile under /std::c++latest for everything to work or at least /std::c++17 for it to build
@@ -105,16 +68,23 @@ int main()
 	{
 		using namespace PortaOneTask;
 
-		std::string text = "..Ave aMmria, Deus Vult";
-		stringToLower(text);
+		std::string text = R"(aabbcb, c)";
 
-		std::vector<char> letters;
-		letters.reserve(text.size() / 30);
+		//uncomment for case insensitivity
+		//stringToLower(text);
+
+		const int lettersInWord = 20;
+		std::string letters;
+		letters.reserve(text.size() / lettersInWord);
 
 		std::string word;
-		word.reserve(30);
+		word.reserve(lettersInWord);
 
 		int32_t prev, space;
+		char result;
+
+
+
 		//skip first symbols if they are not letters
 		prev = space = firstLetter(text, 0);
 		while (space != -1) {
@@ -122,13 +92,16 @@ int main()
 			//special case for last word
 			if (space == -1) [[unlikely]] {
 				word = text.substr(prev, text.size() - 1);
-				letters.push_back(firstUniqueLetter(word));
+				if ((result = firstUniqueLetter(word)) != 0)
+					letters.push_back(result);
 				break;
 			}
 			word = text.substr(prev, space - prev);
-			letters.push_back(firstUniqueLetter(word));
+			if ((result = firstUniqueLetter(word)) != 0)
+				letters.push_back(result);
 			prev = space = firstLetter(text, space);
 		}
+		
 
 		std::cout << text << "\n";
 		for (char letter : letters)
@@ -141,7 +114,7 @@ int main()
 		}
 		std::cout << "\n\n";
 
-		char result = firstUniqueLetter(letters);
+		result = firstUniqueLetter(letters);
 
 		if (result != 0)
 			std::cout << result;
